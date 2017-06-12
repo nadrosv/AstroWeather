@@ -1,0 +1,58 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.nadro.astroweather.Fragment.WeatherFragment">
+
+    <!-- TODO: Update blank fragment layout -->
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/city_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="City"
+            android:textSize="24sp" />
+
+        <TextView
+            android:id="@+id/city_cord"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="50N19E"
+            android:textSize="16sp" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/city_temperature"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="20^C"
+                android:textSize="30sp" />
+
+            <ImageView
+                android:id="@+id/city_weather"
+                android:layout_width="69dp"
+                android:layout_height="63dp"
+                app:srcCompat="@android:drawable/presence_invisible" />
+
+            <TextView
+                android:id="@+id/city_pressure"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="1000hpa"
+                android:textSize="18sp" />
+        </LinearLayout>
+
+    </LinearLayout>
+</RelativeLayout>

@@ -1,0 +1,39 @@
+<resources>
+    <string name="app_name">AstroWeather</string>
+
+    <string name="sunrise">sunrise</string>
+    <string name="sunset">sunset</string>
+    <string name="azimuth_rise">azimuth rise</string>
+    <string name="azimuth_set">azimuth set</string>
+    <string name="twilight_morning">twilight morning</string>
+    <string name="twilight_evening">twilight evening</string>
+    <string name="moon_rise">moonrise</string>
+    <string name="moon_set">moonset</string>
+    <string name="new_moon">new moon</string>
+    <string name="full_moon">full moon</string>
+    <string name="moon_phase">moon phase</string>
+    <string name="synodic_day">synodic day</string>
+    <string name="dusk">dusk</string>
+
+    <string-array name="sun_items">
+        <item>@string/sunrise</item>
+        <item>@string/sunset</item>
+        <item>@string/azimuth_rise</item>
+        <item>@string/azimuth_set</item>
+        <item>@string/twilight_morning</item>
+        <item>@string/twilight_evening</item>
+    </string-array>
+
+    <string-array name="moon_items">
+        <item>@string/moon_rise</item>
+        <item>@string/moon_set</item>
+        <item>@string/full_moon</item>
+        <item>@string/new_moon</item>
+        <item>@string/moon_phase</item>
+        <item>@string/synodic_day</item>
+    </string-array>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+</resources>
