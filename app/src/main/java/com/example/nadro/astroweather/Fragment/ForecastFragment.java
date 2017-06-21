@@ -11,9 +11,8 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.example.nadro.astroweather.MainActivity;
+import com.example.nadro.astroweather.Model.Weather;
 import com.example.nadro.astroweather.R;
-import com.example.nadro.astroweather.Fragment.dummy.DummyContent;
-import com.example.nadro.astroweather.Fragment.dummy.DummyContent.DummyItem;
 
 /**
  * A fragment representing a list of Items.
@@ -28,7 +27,10 @@ public class ForecastFragment extends Fragment {
     // TODO: Customize parameters
     private int mColumnCount = 1;
     private OnListFragmentInteractionListener mListener;
+
     MainActivity mainActivity;
+//    Weather weather;
+
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
@@ -69,7 +71,7 @@ public class ForecastFragment extends Fragment {
             } else {
                 recyclerView.setLayoutManager(new GridLayoutManager(context, mColumnCount));
             }
-            recyclerView.setAdapter(new MyTestItemRecyclerViewAdapter(DummyContent.ITEMS, mListener));
+            recyclerView.setAdapter(new MyForecastRecyclerViewAdapter(/*DummyContent.ITEMS*/mainActivity.getWeather().nextDaysList, mListener));
         }
         return view;
     }
@@ -105,6 +107,6 @@ public class ForecastFragment extends Fragment {
      */
     public interface OnListFragmentInteractionListener {
         // TODO: Update argument type and name
-        void onListFragmentInteraction(DummyItem item);
+        void onListFragmentInteraction(Weather.NextDays item);
     }
 }

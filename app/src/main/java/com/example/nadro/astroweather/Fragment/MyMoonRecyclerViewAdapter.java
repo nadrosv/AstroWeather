@@ -8,13 +8,12 @@ import android.widget.TextView;
 
 import com.example.nadro.astroweather.AstroInfo;
 import com.example.nadro.astroweather.Fragment.MoonFragment.OnListFragmentInteractionListener;
-import com.example.nadro.astroweather.Fragment.dummy.DummyContent.DummyItem;
 import com.example.nadro.astroweather.R;
 
 import java.util.List;
 
 /**
- * {@link RecyclerView.Adapter} that can display a {@link DummyItem} and makes a call to the
+ * {@link RecyclerView.Adapter} that can display a {} and makes a call to the
  * specified {@link OnListFragmentInteractionListener}.
  * TODO: Replace the implementation with code for your data type.
  */

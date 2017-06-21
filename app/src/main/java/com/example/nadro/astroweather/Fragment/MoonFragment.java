@@ -17,8 +17,6 @@ import com.example.nadro.astroweather.AstroInfo;
 import com.example.nadro.astroweather.AstroInfoCalculator;
 import com.example.nadro.astroweather.MainActivity;
 import com.example.nadro.astroweather.R;
-import com.example.nadro.astroweather.Fragment.dummy.DummyContent;
-import com.example.nadro.astroweather.Fragment.dummy.DummyContent.DummyItem;
 
 import java.util.ArrayList;
 import java.util.List;

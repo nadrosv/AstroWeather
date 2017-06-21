@@ -1,6 +1,7 @@
 package com.example.nadro.astroweather.Fragment;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -13,7 +14,11 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.example.nadro.astroweather.MainActivity;
+import com.example.nadro.astroweather.Model.CityResult;
+import com.example.nadro.astroweather.Model.Weather;
 import com.example.nadro.astroweather.R;
+import com.example.nadro.astroweather.YahooWeather;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -33,9 +38,15 @@ public class WeatherFragment extends Fragment {
 //    private String mParam1;
 //    private String mParam2;
 
+    final String DEGREE  = "\u00b0";
+
+    MainActivity mainActivity;
+
+    CityResult cRes;
+
     private String cityName;
     private String cityCords;
-    private Float cityTemperature;
+    private Integer cityTemperature;
     private Float cityPressure;
 
     private TextView cityNameTextView;
@@ -91,8 +102,6 @@ public class WeatherFragment extends Fragment {
         cityPressureTextView = (TextView) view.findViewById(R.id.city_pressure);
         cityWeatherIcon = (ImageView) view.findViewById(R.id.city_weather);
 
-//        fillWeatherView();
-        // Inflate the layout for this fragment
         return view;
     }
 
@@ -100,31 +109,57 @@ public class WeatherFragment extends Fragment {
     public void onResume() {
         super.onResume();
 //        if (MainActivity.selectedCity != null)
-//            populateTempTextViews(MainActivity.selectedCity, MainActivity.selectedCity.getWeather());
-
-        fillWeatherView();
+//            fillWeatherView(MainActivity.selectedCity);
+        
         Log.d("Basic Temp resume", "calling");
 
     }
 
-    public void fillWeatherView(){
-        getWeatherInfo("");
-        cityNameTextView.setText(cityName);
-        cityCordsTextView.setText(cityCords);
-        cityTemperatureTextView.setText(cityTemperature.toString());
-        cityPressureTextView.setText((cityPressure.toString()));
-//        cityWeatherIcon.setImageDrawable(testImage);
+//    public void populateTempTextViews(CityResult city, Weather weather) {
+//        Log.d("cond", String.valueOf(weather.condition.temp + (char) 0x00B0) + MainActivity.unitSetting);
+//        tempTextView.setText(String.valueOf(weather.condition.temp) + (char) 0x00B0 + MainActivity.unitSetting);
+//        descTextView.setText(String.valueOf(weather.condition.description));
+//        if (weather.atmosphere.pressure > 10000)
+//            weather.atmosphere.pressure /= 33.8639;
+//        if (MainActivity.unitSetting.equals("c"))
+//            pressureTextView.setText("Pressure   " + String.valueOf(weather.atmosphere.pressure) + "mb");
+//        else
+//            pressureTextView.setText(String.valueOf(weather.atmosphere.pressure) + "in");
+//
+//        cityTextView.setText(String.valueOf(city.getCityName()));
+//        timeTextView.setText(String.valueOf(weather.lastUpdate));
+//
+//    }
+
+    public void fillWeatherView(CityResult city){
+        if(city.getWoeid() != null) {
+            Weather weather = city.getWeather();
+            cityNameTextView.setText(city.getCityName());
+            cityCordsTextView.setText(city.getCoordinates());
+            cityTemperatureTextView.setText(weather.condition.temp + DEGREE + weather.units.temperature);
+            cityPressureTextView.setText(String.format("%.1f", weather.atmosphere.pressure) + " hPa");
+        } else{
+            cityNameTextView.setText("ND");
+            cityCordsTextView.setText("ND");
+            cityTemperatureTextView.setText("ND");
+            cityPressureTextView.setText("ND");
+        }
 
     }
 
-    public void getWeatherInfo(String cName){
-//        if(cityName == ""){
-            cityName = "Warszawa";
-            this.cityCords = "fake 51N19E";
-            this.cityTemperature = 20f;
-            this.cityPressure = 1000f;
-//        }
-    }
+//    public CityResult getWeatherInfo(String cName){
+//        YahooWeather.makeJsonObjectRequest(cName, new YahooWeather.VolleyCallback() {
+//            @Override
+//            public void onSuccess(CityResult result) {
+//                cRes = result;
+//            }
+//        });
+//        return cRes;
+////        cityName = cRes.getCityName(); //"Warszawa";
+////        cityCords = cRes.getCountry(); //"fake 51N19E";
+////        cityTemperature = cRes.getWeather().condition.temp;//20f;
+////        cityPressure = cRes.getWeather().atmosphere.pressure; //1000f;
+//    }
 
     // TODO: Rename method, update argument and hook method into UI event
 //    public void onButtonPressed(Uri uri) {
@@ -136,12 +171,13 @@ public class WeatherFragment extends Fragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }
+        mainActivity = (MainActivity) context;
+//        if (context instanceof OnFragmentInteractionListener) {
+//            mListener = (OnFragmentInteractionListener) context;
+//        } else {
+//            throw new RuntimeException(context.toString()
+//                    + " must implement OnFragmentInteractionListener");
+//        }
     }
 
     @Override
@@ -163,5 +199,9 @@ public class WeatherFragment extends Fragment {
     public interface OnFragmentInteractionListener {
         // TODO: Update argument type and name
         void onWeatherFragmentInteraction(String string);
+    }
+
+    public void setImage(Bitmap image) {
+        cityWeatherIcon.setImageBitmap(image);
     }
 }

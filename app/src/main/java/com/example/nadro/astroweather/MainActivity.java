@@ -1,5 +1,7 @@
 package com.example.nadro.astroweather;
 
+import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
@@ -7,13 +9,19 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.Volley;
 import com.astrocalculator.*;
 import com.example.nadro.astroweather.Fragment.DetailsFragment;
 import com.example.nadro.astroweather.Fragment.MoonFragment;
 import com.example.nadro.astroweather.Fragment.SunFragment;
 import com.example.nadro.astroweather.Fragment.ForecastFragment;
+import com.example.nadro.astroweather.Fragment.NextDaysFragment;
 import com.example.nadro.astroweather.Fragment.WeatherFragment;
+import com.example.nadro.astroweather.Model.CityResult;
+import com.example.nadro.astroweather.Model.Weather;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -26,10 +34,10 @@ import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity implements DetailsFragment.OnFragmentInteractionListener, WeatherFragment.OnFragmentInteractionListener {
 
-    // instantiate stuff!!!
+    // instantiate stuff!!!----------------------------------
     private SunFragment sunFragment;
     private MoonFragment moonFragment;
-    private ForecastFragment forecastFragment;
+    private NextDaysFragment nextDaysFragment;
     private WeatherFragment weatherFragment;
     private DetailsFragment detailsFragment;
 
@@ -37,22 +45,41 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
     private TextView latitudeTextView;
     private TextView clockTextView;
 
+    //    astro shit
+    AstroDateTime astroDateTime;
+    AstroCalculator.Location location;
+//    --------------------------------------------------------
+
 //    settings stuff & stored preferences
     String longitudeSetting = "19.5";
     String latitudeSetting = "51.5";
 
-//    astro shit
-    AstroDateTime astroDateTimeTime;
-    AstroCalculator.Location location;
 
+
+    public static String refreshTimeSetting;
+    private static String newCitySetting;
+    private String selectedCitySetting;
+    public static String unitSetting;
+    SharedPreferences SP;
+
+
+    //state
+    public static CityResult selectedCity;
+    private ArrayList<CityResult> favCityList = new ArrayList<>();
+    //network shit
+    RequestQueue requestQueue;
+
+
+//SUPER ADAPTERS--------------------------------------------------------------------------
     //The pager adapter, which provides the pages to the view pager widget.
     SectionsPagerAdapter pagerAdapter;
-
     //number of pages
     private static final int NUM_PAGES = 5;
-
     //The pager widget, which handles animation and allows swiping horizontally to access previous and next wizard steps.
     private ViewPager viewPager;
+
+    TextView test;
+
 
 
 
@@ -64,13 +91,19 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
 
         // DO STUFF WITH STUFF XD
 
-        longitudeTextView = (TextView) findViewById(R.id.lonTextView);
-        latitudeTextView = (TextView) findViewById(R.id.latTextView);
-        clockTextView = (TextView) findViewById(R.id.clockTextView);
+        requestQueue = Volley.newRequestQueue(getApplicationContext());
+
+        longitudeTextView = (TextView) findViewById(R.id.lon_text_view);
+        latitudeTextView = (TextView) findViewById(R.id.lat_text_view);
+        clockTextView = (TextView) findViewById(R.id.clock_text_view);
+
+        test = (TextView) findViewById(R.id.test_text_view);
 
         latitudeTextView.setText(latitudeSetting);
-        longitudeTextView.setText(/*String.valueOf(longitudeSetting)*/longitudeSetting);
+        longitudeTextView.setText(longitudeSetting);
         setClockTextView();
+
+        astroDateTime = new AstroDateTime();
 
 
         // Instantiate a ViewPager and a PagerAdapter.
@@ -82,6 +115,11 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
             setupViewPager(viewPager);
             viewPager.setOffscreenPageLimit(5);
         }
+
+        unitSetting = "c";
+        selectedCitySetting = "new york";
+
+        getJsonCity(selectedCitySetting);
     }
 
     private void setupViewPager(ViewPager viewPager) {
@@ -91,14 +129,14 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
             moonFragment = new MoonFragment();
             weatherFragment = new WeatherFragment();
             detailsFragment = new DetailsFragment();
-            forecastFragment = new ForecastFragment();
+            nextDaysFragment = new NextDaysFragment();
 //            fragment5 = new NextDaysFragment();
             pagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
             pagerAdapter.addFragment(sunFragment, "SUN");
             pagerAdapter.addFragment(moonFragment, "MOON");
             pagerAdapter.addFragment(weatherFragment, "WEATHER");
             pagerAdapter.addFragment(detailsFragment, "DETAILS");
-            pagerAdapter.addFragment(forecastFragment, "TEST");
+            pagerAdapter.addFragment(nextDaysFragment, "TEST");
 //            pagerAdapter.addFragment(fragment3, getString(nadro.weather.R.string.basic_temp_label));
 //            pagerAdapter.addFragment(fragment4, getString(nadro.weather.R.string.additional_temp_label));
 //            pagerAdapter.addFragment(fragment5, getString(nadro.weather.R.string.days_temp_label));
@@ -108,7 +146,7 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
             moonFragment = (MoonFragment) pagerAdapter.getItem(1);
             weatherFragment = (WeatherFragment) pagerAdapter.getItem(2);
             detailsFragment = (DetailsFragment) pagerAdapter.getItem(3);
-            forecastFragment = (ForecastFragment) pagerAdapter.getItem(4);
+            nextDaysFragment = (NextDaysFragment) pagerAdapter.getItem(4);
 //            fragment3 = (WeatherFragment) pagerAdapter.getItem(2);
 //            Log.d("fragment 3 adapter", pagerAdapter.getItem(2).toString());
 //            fragment4 = (MoreWeatherFragment) pagerAdapter.getItem(3);
@@ -116,9 +154,42 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
         }
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d("mainActivity onResume", "calling");
+
+        latitudeSetting = "51.5";
+        longitudeSetting = "19.5";
+//        latitudeSetting = SP.getString("latitudeSetting", "50"); //szerokosc
+//        longitudeSetting = SP.getString("longitudeSetting", "20"); //dlugosc
+//        refreshTimeSetting = SP.getString("refreshTimeSetting", "10");
+//        newCitySetting = SP.getString("newCitySetting", "");
+//        Log.d("newCity", newCitySetting);
+
+//        if (!newCitySetting.equals(selectedCitySetting)) {
+//            getCity(newCitySetting);
+//        }
+//        unitSetting = SP.getString("unitSetting", "c");
+//        latitudeTextView.setText(getResources().getString(R.string.la, latitudeSetting));
+//        longitudeTextView.setText(getResources().getString(R.string.long_textField, longitudeSetting));
+        latitudeTextView.setText(latitudeSetting);
+        longitudeTextView.setText(/*String.valueOf(longitudeSetting)*/longitudeSetting);
+
+        setUpAstroDateTime(astroDateTime);
+
+//        Log.d("New city setting", newCitySetting);
+//        if(selectedCity != null)
+//            handleCitySelection(selectedCity);
+    }
+
     public com.astrocalculator.AstroCalculator.Location getLocation() {
         return new AstroCalculator.Location(Double.valueOf(this.getLatitudeSetting()),
                 Double.valueOf(this.getLongitudeSetting()));
+    }
+
+    public Weather getWeather(){
+        return this.selectedCity.getWeather();
     }
 
     public String getLatitudeSetting() {
@@ -152,6 +223,85 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
             astroDateTime.setDaylightSaving(false);
             astroDateTime.setTimezoneOffset(calendar.get(Calendar.ZONE_OFFSET) / (60 * 60 * 1000));
         }
+    }
+
+    private void getJsonCity(final String cityName){
+        YahooWeather.getJsonCity(cityName, requestQueue, new YahooWeather.WeatherClientListener() {
+            @Override
+            public void onCityResponse(CityResult city) {
+                if (city.getCityName() != null) {
+                    selectedCity = city;
+                    getJsonWeather(city);
+                    Log.d("c", city.toString());
+                } else {
+                    Toast.makeText(MainActivity.this, "Bledne miasto",
+                            Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            public void onWeatherResponse(Weather weather) {
+            }
+
+            @Override
+            public void onImageReady(Bitmap image) {
+            }
+        });
+    }
+
+    private void getJsonWeather(final CityResult city) {
+        String woeid = city.getWoeid();
+        if (woeid != null) {
+            YahooWeather.getJsonWeather(woeid, unitSetting, requestQueue, new YahooWeather.WeatherClientListener() {
+                @Override
+                public void onCityResponse(CityResult city) {
+                }
+
+                @Override
+                public void onWeatherResponse(Weather weather) {
+                    selectedCity = city;
+                    selectedCity.setWeather(weather);
+
+                    String s1 = selectedCity.getWeather().condition.date;
+                    String s2 = String.valueOf(selectedCity.getWeather().atmosphere.humidity);
+                    String s3 = String.valueOf(selectedCity.getWeather().wind.speed);
+
+
+                    Log.d("Can we display this?", s1 + " " + s2 + " " + s3);
+                    test.setText(selectedCity.getWeather().condition.temp + " " + " " + selectedCity.getCityName());
+
+                    weatherFragment.fillWeatherView(selectedCity);
+                    detailsFragment.fillDetailsView(selectedCity);
+                    nextDaysFragment.updateListValues();
+
+                    getImage();
+
+                }
+
+                @Override
+                public void onImageReady(Bitmap image) {
+                }
+            });
+        }else{
+            Log.d("getWeather", "woeid is null bro");
+        }
+    }
+
+    private void getImage() {
+        YahooWeather.getImage(selectedCity.getWeather().condition.code, requestQueue, new YahooWeather.WeatherClientListener() {
+            @Override
+            public void onCityResponse(CityResult city) {
+            }
+
+            @Override
+            public void onWeatherResponse(Weather weather) {
+            }
+
+            @Override
+            public void onImageReady(Bitmap image) {
+                weatherFragment.setImage(image);
+            }
+        });
     }
 
     private void setClockTextView() {
