@@ -37,7 +37,7 @@ public class NextDaysListAdapter extends ArrayAdapter<Weather.NextDays> {
         dateTextView = (TextView) convertView.findViewById(R.id.list_item_date);
         descTextView = (TextView) convertView.findViewById(R.id.list_item_desc);
         tempTextView = (TextView) convertView.findViewById(R.id.list_item_temp);
-        imageView = (ImageView) convertView.findViewById(R.id.temp_imageView);
+//        imageView = (ImageView) convertView.findViewById(R.id.temp_imageView);
 
         final Weather.NextDays item = getItem(position);
         setTextItem(item);
