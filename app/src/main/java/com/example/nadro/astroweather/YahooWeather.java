@@ -162,23 +162,8 @@ public class YahooWeather {
         return "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20geo.places(1)%20where%20text=\""+cityName+"\"&format=json";
     }
 
-    private static String makeQueryForJsonCity2(String cityName){
-        cityName = cityName.replaceAll(" ", "%20");
-        return "https://query.yahooapis.com/v1/public/yql?q=select%20woeid%20from%20geo.places(1)%20where%20text=\""+cityName+"\"&format=json";
-    }
-
     private static String makeQueryForJsonWeather(String woeid, String unit) {
         return "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20weather.forecast%20where%20woeid=" + woeid + "%20and%20u=\"" + unit + "\"&format=json";
-    }
-
-    private static String makeQueryCityURL(String cityName) {
-        // We remove spaces in cityName
-        cityName = cityName.replaceAll(" ", "%20");
-        return "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20geo.places(1)%20where%20text=\""+cityName+"\"";
-    }
-
-    private static String makeWeatherURL(String woeid, String unit) {
-        return "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20weather.forecast%20where%20woeid=" + woeid + "%20and%20u=\"" + unit + "\"";
     }
 
 

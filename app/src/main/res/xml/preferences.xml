@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--<EditTextPreference android:title="@string/settings_refresh_time"-->
+        <!--android:key="refreshTimeSetting"-->
+        <!--android:numeric="integer"-->
+        <!--android:summary="@string/refresh_pref_summary"/>-->
+
+    <!--<EditTextPreference android:title="@string/add_city_menu"-->
+        <!--android:key="newCitySetting"-->
+        <!--/>-->
+
+    <ListPreference
+        android:key="unitSetting"
+        android:title="@string/settings_units"
+        android:entries="@array/units"
+        android:entryValues="@array/units"/>
+
+    <ListPreference
+        android:defaultValue="1"
+        android:title="@string/settings_refresh_time"
+        android:summary="@string/refresh_pref_summary"
+        android:entries="@array/refresh_time"
+        android:entryValues="@array/refresh_time"
+        android:key="list_preference_1" />
+
+
+    <PreferenceCategory
+        android:title="@string/coordinates_setting">
+
+        <EditTextPreference android:title="@string/settings_longitude"
+            android:key="longitudeSetting"
+            android:numeric="decimal"
+            android:summary="@string/longitude_pref_summary"/>
+
+        <EditTextPreference android:title="@string/settings_latitude"
+            android:key="latitudeSetting"
+            android:numeric="decimal"
+            android:summary="@string/latitude_pref_summary"/>
+    </PreferenceCategory>
+
+</PreferenceScreen>

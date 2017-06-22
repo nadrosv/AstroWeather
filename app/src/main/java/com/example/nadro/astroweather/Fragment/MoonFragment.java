@@ -7,6 +7,7 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,6 +21,8 @@ import com.example.nadro.astroweather.R;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * A fragment representing a list of Items.
@@ -29,10 +32,11 @@ import java.util.List;
  */
 public class MoonFragment extends Fragment {
 
-    // TODO: Customize parameter argument names
-    private static final String ARG_COLUMN_COUNT = "column-count";
-    // TODO: Customize parameters
-    private int mColumnCount = 1;
+//    // TODO: Customize parameter argument names
+//    private static final String ARG_COLUMN_COUNT = "column-count";
+//    // TODO: Customize parameters
+//    private int mColumnCount = 1;
+
     private OnListFragmentInteractionListener mListener;
 
     //shit got crazy xxxxxxxxxxxxxx
@@ -50,6 +54,11 @@ public class MoonFragment extends Fragment {
     //moonInfo values
     private List<String> moonValues;
 
+    Timer updateListTimer = null;
+    TimerTask updateValuesTask;
+
+    RecyclerView recyclerView;
+
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
@@ -58,39 +67,40 @@ public class MoonFragment extends Fragment {
     }
 
     // TODO: Customize parameter initialization
-    @SuppressWarnings("unused")
-    public static MoonFragment newInstance(int columnCount) {
-        MoonFragment fragment = new MoonFragment();
-        Bundle args = new Bundle();
-        args.putInt(ARG_COLUMN_COUNT, columnCount);
-        fragment.setArguments(args);
-        return fragment;
-    }
+//    @SuppressWarnings("unused")
+//    public static MoonFragment newInstance(int columnCount) {
+//        MoonFragment fragment = new MoonFragment();
+//        Bundle args = new Bundle();
+//        args.putInt(ARG_COLUMN_COUNT, columnCount);
+//        fragment.setArguments(args);
+//        return fragment;
+//    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d("MoonFragment", "onCreate");
 
-        if (getArguments() != null) {
-            mColumnCount = getArguments().getInt(ARG_COLUMN_COUNT);
-        }
+//        if (getArguments() != null) {
+//            mColumnCount = getArguments().getInt(ARG_COLUMN_COUNT);
+//        }
+        moonResources = getResources();
+        moonLabels = moonResources.getStringArray(R.array.moon_items);
+        moonValues = getMoonValues();
+        moonInfoList = setMoonList(moonLabels);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        Log.d("MoonFragment", "onCreateView");
         View view = inflater.inflate(R.layout.fragment_moon_list, container, false);
 
-        //get labels
-        moonResources = getResources();
-        moonLabels = moonResources.getStringArray(R.array.moon_items);
-        moonValues = getMoonValues();
-        moonInfoList = setMoonList(moonLabels);
 
         // Set the adapter
         if (view instanceof RecyclerView) {
             Context context = view.getContext();
-            RecyclerView recyclerView = (RecyclerView) view;
+            recyclerView = (RecyclerView) view;
 //            if (mColumnCount <= 1) {
                 recyclerView.setLayoutManager(new LinearLayoutManager(context));
 //            } else {
@@ -101,8 +111,51 @@ public class MoonFragment extends Fragment {
         return view;
     }
 
+    @Override
+    public void onPause() {
+        super.onPause();
+        Log.d("MoonFragment", "onPause");
+//        stopTimerTask();
+    }
+
+    @Override
+    public void onResume(){
+        super.onResume();
+        Log.d("MoonFragment", "onResume");
+        mainActivity.updateLocation();
+        moonValues = getMoonValues();
+        moonInfoList = setMoonList(moonLabels);
+        recyclerView.setAdapter(new MyMoonRecyclerViewAdapter(moonInfoList, mListener));
+
+//        if (updateListTimer == null) {
+//            startTimer();
+//        }
+    }
+
+    public void startTimer() {
+        Log.d("start timer","calling");
+
+        updateListTimer = new Timer("sunListTimer");
+
+        updateSunMoonValues();
+
+        Log.d("refresh time:", MainActivity.refreshTimeSetting);
+        updateListTimer.schedule(updateValuesTask,0, Long.parseLong(MainActivity.refreshTimeSetting)*1000);
+    }
+
+    public void stopTimerTask() {
+        if (updateListTimer != null) {
+            Log.d("Moon onPause del timer", "calling");
+            updateListTimer.cancel();
+            updateListTimer.purge();
+            updateListTimer = null;
+            updateValuesTask.cancel();
+        }
+    }
+
     //sets labels from resources and calculated values
     public List<AstroInfo> setMoonList (String[] moonLabels) {
+        Log.d("MoonFragment", "setMoonInfoList");
         AstroInfo astroInfo;
         List<AstroInfo> moonInfoList = new ArrayList<>();
         for (int i=0; i < 6; i++) {
@@ -116,15 +169,37 @@ public class MoonFragment extends Fragment {
     }
 
     public List<String> getMoonValues() {
+        Log.d("MoonFragment", "getMoonValues");
         location = mainActivity.getLocation();
         astroDateTime = mainActivity.getAstroDateTime();
         mainActivity.setUpAstroDateTime(astroDateTime);
         return new AstroInfoCalculator(location, astroDateTime).getMoonInfoList();
     }
 
+    public void updateSunMoonValues() {
+        Log.d("MoonFragment", "updateValues");
+        updateValuesTask = new TimerTask() {
+            @Override
+            public void run() {
+                Log.d("moon timer", "start");
+                mainActivity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        for (int i=0; i < 6; i++) {
+                            moonValues = getMoonValues();
+                            moonInfoList.get(i).setValue(moonValues.get(i).toString());
+                        }
+//                        adapter.notifyDataSetChanged();
+                    }
+                });
+            }
+        };
+    }
+
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
+        Log.d("MoonFragment", "onAttach");
         mainActivity = (MainActivity) context;
 //        if (context instanceof OnListFragmentInteractionListener) {
 //            mListener = (OnListFragmentInteractionListener) context;
@@ -137,6 +212,7 @@ public class MoonFragment extends Fragment {
     @Override
     public void onDetach() {
         super.onDetach();
+        Log.d("MoonFragment", "onDetach");
         mListener = null;
     }
 

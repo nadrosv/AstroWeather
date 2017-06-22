@@ -25,7 +25,7 @@ import com.example.nadro.astroweather.YahooWeather;
  * Activities that contain this fragment must implement the
  * {@link WeatherFragment.OnFragmentInteractionListener} interface
  * to handle interaction events.
- * Use the {@link WeatherFragment#newInstance} factory method to
+ * Use the {@link WeatherFragment} factory method to
  * create an instance of this fragment.
  */
 public class WeatherFragment extends Fragment {
@@ -42,12 +42,21 @@ public class WeatherFragment extends Fragment {
 
     MainActivity mainActivity;
 
+
+//    CityResult cRes;
+
+//    private String cityName;
+//    private String cityCords;
+//    private Integer cityTemperature;
+//    private Float cityPressure;
+
     CityResult cRes;
 
     private String cityName;
     private String cityCords;
     private Integer cityTemperature;
     private Float cityPressure;
+
 
     private TextView cityNameTextView;
     private TextView cityCordsTextView;
@@ -64,24 +73,24 @@ public class WeatherFragment extends Fragment {
     public WeatherFragment() {
         // Required empty public constructor
     }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment WeatherFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static WeatherFragment newInstance(String param1, String param2) {
-        WeatherFragment fragment = new WeatherFragment();
-        Bundle args = new Bundle();
-//        args.putString(ARG_PARAM1, param1);
-//        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
+//
+//    /**
+//     * Use this factory method to create a new instance of
+//     * this fragment using the provided parameters.
+//     *
+//     * @param param1 Parameter 1.
+//     * @param param2 Parameter 2.
+//     * @return A new instance of fragment WeatherFragment.
+//     */
+//    // TODO: Rename and change types and number of parameters
+//    public static WeatherFragment newInstance(String param1, String param2) {
+//        WeatherFragment fragment = new WeatherFragment();
+//        Bundle args = new Bundle();
+////        args.putString(ARG_PARAM1, param1);
+////        args.putString(ARG_PARAM2, param2);
+//        fragment.setArguments(args);
+//        return fragment;
+//    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -108,8 +117,11 @@ public class WeatherFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-//        if (MainActivity.selectedCity != null)
-//            fillWeatherView(MainActivity.selectedCity);
+
+//        if (MainActivity.currentCity != null)
+//            fillWeatherView(MainActivity.currentCity);
+
+
         
         Log.d("Basic Temp resume", "calling");
 
@@ -131,6 +143,7 @@ public class WeatherFragment extends Fragment {
 //
 //    }
 
+
     public void fillWeatherView(CityResult city){
         if(city.getWoeid() != null) {
             Weather weather = city.getWeather();
@@ -145,7 +158,24 @@ public class WeatherFragment extends Fragment {
             cityPressureTextView.setText("ND");
         }
 
+
+
+
+//    public CityResult getWeatherInfo(String cName){
+//        YahooWeather.makeJsonObjectRequest(cName, new YahooWeather.VolleyCallback() {
+//            @Override
+//            public void onSuccess(CityResult result) {
+//                cRes = result;
+//            }
+//        });
+//        return cRes;
+////        cityName = cRes.getCityName(); //"Warszawa";
+////        cityCords = cRes.getCountry(); //"fake 51N19E";
+////        cityTemperature = cRes.getWeather().condition.temp;//20f;
+////        cityPressure = cRes.getWeather().atmosphere.pressure; //1000f;
+//    }
     }
+
 
 //    public CityResult getWeatherInfo(String cName){
 //        YahooWeather.makeJsonObjectRequest(cName, new YahooWeather.VolleyCallback() {

@@ -22,9 +22,9 @@ public class NextDaysFragment extends Fragment {
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        if (MainActivity.selectedCity != null) {
 
-            adapter = new NextDaysListAdapter(mainActivity, MainActivity.selectedCity.getWeather().nextDaysList);
+        if (MainActivity.currentCity != null) {
+            adapter = new NextDaysListAdapter(mainActivity, MainActivity.currentCity.getWeather().nextDaysList);
             daysListView.setAdapter(adapter);
         }
 
@@ -55,8 +55,9 @@ public class NextDaysFragment extends Fragment {
     }
 
     public void updateListValues() {
-        if (MainActivity.selectedCity != null) {
-            adapter = new NextDaysListAdapter(mainActivity, MainActivity.selectedCity.getWeather().nextDaysList);
+
+        if (MainActivity.currentCity != null) {
+            adapter = new NextDaysListAdapter(mainActivity, MainActivity.currentCity.getWeather().nextDaysList);
             daysListView.setAdapter(adapter);
             adapter.notifyDataSetChanged();
         }

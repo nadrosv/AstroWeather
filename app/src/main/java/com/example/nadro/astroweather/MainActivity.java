@@ -1,13 +1,23 @@
 package com.example.nadro.astroweather;
 
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.preference.PreferenceManager;
+import android.support.design.widget.TabLayout;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -17,12 +27,14 @@ import com.astrocalculator.*;
 import com.example.nadro.astroweather.Fragment.DetailsFragment;
 import com.example.nadro.astroweather.Fragment.MoonFragment;
 import com.example.nadro.astroweather.Fragment.SunFragment;
-import com.example.nadro.astroweather.Fragment.ForecastFragment;
 import com.example.nadro.astroweather.Fragment.NextDaysFragment;
 import com.example.nadro.astroweather.Fragment.WeatherFragment;
 import com.example.nadro.astroweather.Model.CityResult;
 import com.example.nadro.astroweather.Model.Weather;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -32,9 +44,39 @@ import java.util.TimeZone;
 import java.util.Timer;
 import java.util.TimerTask;
 
+
 public class MainActivity extends AppCompatActivity implements DetailsFragment.OnFragmentInteractionListener, WeatherFragment.OnFragmentInteractionListener {
 
-    // instantiate stuff!!!----------------------------------
+
+    SharedPreferences SP;
+
+    private static String newCitySetting;
+    private String selectedCitySetting;
+
+    public static String refreshTimeSetting;
+    public static String unitSetting;
+    public static String latitudeSetting;
+    public static String longitudeSetting;
+
+
+    // ASTRO STUFF -------------------------------
+    AstroDateTime astroDateTime;
+    AstroCalculator.Location location;
+
+    // STATE -------------------------------------
+    public static CityResult currentCity;
+    private ArrayList<CityResult> favCityList = new ArrayList<>();
+    RequestQueue requestQueue;
+
+
+    // VIEW --------------------------------------
+    //The pager adapter, which provides the pages to the view pager widget.
+    SectionsPagerAdapter pagerAdapter;
+    //number of pages
+    private static final int NUM_PAGES = 5;
+    //The pager widget, which handles animation and allows swiping horizontally to access previous and next wizard steps.
+    private ViewPager viewPager;
+
     private SunFragment sunFragment;
     private MoonFragment moonFragment;
     private NextDaysFragment nextDaysFragment;
@@ -45,41 +87,6 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
     private TextView latitudeTextView;
     private TextView clockTextView;
 
-    //    astro shit
-    AstroDateTime astroDateTime;
-    AstroCalculator.Location location;
-//    --------------------------------------------------------
-
-//    settings stuff & stored preferences
-    String longitudeSetting = "19.5";
-    String latitudeSetting = "51.5";
-
-
-
-    public static String refreshTimeSetting;
-    private static String newCitySetting;
-    private String selectedCitySetting;
-    public static String unitSetting;
-    SharedPreferences SP;
-
-
-    //state
-    public static CityResult selectedCity;
-    private ArrayList<CityResult> favCityList = new ArrayList<>();
-    //network shit
-    RequestQueue requestQueue;
-
-
-//SUPER ADAPTERS--------------------------------------------------------------------------
-    //The pager adapter, which provides the pages to the view pager widget.
-    SectionsPagerAdapter pagerAdapter;
-    //number of pages
-    private static final int NUM_PAGES = 5;
-    //The pager widget, which handles animation and allows swiping horizontally to access previous and next wizard steps.
-    private ViewPager viewPager;
-
-    TextView test;
-
 
 
 
@@ -87,17 +94,28 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d("MainActivity", "onCreate");
         setContentView(R.layout.activity_main);
 
-        // DO STUFF WITH STUFF XD
-
         requestQueue = Volley.newRequestQueue(getApplicationContext());
+        SP = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+
+        refreshTimeSetting = SP.getString("refreshTimeSetting", "10000");
+        latitudeSetting = SP.getString("latitudeSetting", "0"); //szerokosc
+        longitudeSetting = SP.getString("longitudeSetting", "0"); //dlugosc
+        newCitySetting = SP.getString("newCitySetting", "");
+        unitSetting = SP.getString("unitSetting", "c");
+        selectedCitySetting = SP.getString("selectedCitySetting","");
+        location = this.getLocation();
+        astroDateTime = this.getAstroDateTime();
 
         longitudeTextView = (TextView) findViewById(R.id.lon_text_view);
         latitudeTextView = (TextView) findViewById(R.id.lat_text_view);
         clockTextView = (TextView) findViewById(R.id.clock_text_view);
 
-        test = (TextView) findViewById(R.id.test_text_view);
+//        ??
+//        Toolbar toolbar = (Toolbar) findViewById(nadro.weather.R.id.toolbar);
+//        setSupportActionBar(toolbar);
 
         latitudeTextView.setText(latitudeSetting);
         longitudeTextView.setText(longitudeSetting);
@@ -114,15 +132,30 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
         if (viewPager != null) {
             setupViewPager(viewPager);
             viewPager.setOffscreenPageLimit(5);
+
+//            !!!!!
+//            TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
+//            if (tabLayout != null) {
+//                tabLayout.setupWithViewPager(viewPager);
+//            }
         }
 
-        unitSetting = "c";
-        selectedCitySetting = "new york";
+        if(!selectedCitySetting.equals("")) {
 
-        getJsonCity(selectedCitySetting);
+            if (!getObjectsFromFiles()) {
+                for (CityResult c : favCityList) {
+                    if (c.getCityName().equals(selectedCitySetting)) {
+                        currentCity = c;
+                    }
+                }
+                refreshWeather();
+            }
+        }
+
     }
 
     private void setupViewPager(ViewPager viewPager) {
+        Log.d("MainActivity", "setupViewPager");
         if (moonFragment == null && sunFragment == null) {
 
             sunFragment = new SunFragment();
@@ -130,16 +163,13 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
             weatherFragment = new WeatherFragment();
             detailsFragment = new DetailsFragment();
             nextDaysFragment = new NextDaysFragment();
-//            fragment5 = new NextDaysFragment();
+
             pagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
             pagerAdapter.addFragment(sunFragment, "SUN");
             pagerAdapter.addFragment(moonFragment, "MOON");
             pagerAdapter.addFragment(weatherFragment, "WEATHER");
             pagerAdapter.addFragment(detailsFragment, "DETAILS");
             pagerAdapter.addFragment(nextDaysFragment, "TEST");
-//            pagerAdapter.addFragment(fragment3, getString(nadro.weather.R.string.basic_temp_label));
-//            pagerAdapter.addFragment(fragment4, getString(nadro.weather.R.string.additional_temp_label));
-//            pagerAdapter.addFragment(fragment5, getString(nadro.weather.R.string.days_temp_label));
 
             viewPager.setAdapter(pagerAdapter);
             sunFragment = (SunFragment) pagerAdapter.getItem(0);
@@ -147,40 +177,50 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
             weatherFragment = (WeatherFragment) pagerAdapter.getItem(2);
             detailsFragment = (DetailsFragment) pagerAdapter.getItem(3);
             nextDaysFragment = (NextDaysFragment) pagerAdapter.getItem(4);
-//            fragment3 = (WeatherFragment) pagerAdapter.getItem(2);
-//            Log.d("fragment 3 adapter", pagerAdapter.getItem(2).toString());
-//            fragment4 = (MoreWeatherFragment) pagerAdapter.getItem(3);
-//            fragment5 = (NextDaysFragment) pagerAdapter.getItem(4);
         }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        Log.d("mainActivity onResume", "calling");
+        Log.d("MainActivity", "onResume");
 
-        latitudeSetting = "51.5";
-        longitudeSetting = "19.5";
-//        latitudeSetting = SP.getString("latitudeSetting", "50"); //szerokosc
-//        longitudeSetting = SP.getString("longitudeSetting", "20"); //dlugosc
-//        refreshTimeSetting = SP.getString("refreshTimeSetting", "10");
-//        newCitySetting = SP.getString("newCitySetting", "");
-//        Log.d("newCity", newCitySetting);
+        latitudeSetting = SP.getString("latitudeSetting", "0"); //szerokosc
+        longitudeSetting = SP.getString("longitudeSetting", "0"); //dlugosc
+        refreshTimeSetting = SP.getString("refreshTimeSetting", "10000");
+        newCitySetting = SP.getString("newCitySetting", "");
+        unitSetting = SP.getString("unitSetting", "c");
+        Log.d("newCity", newCitySetting);
 
-//        if (!newCitySetting.equals(selectedCitySetting)) {
-//            getCity(newCitySetting);
-//        }
-//        unitSetting = SP.getString("unitSetting", "c");
-//        latitudeTextView.setText(getResources().getString(R.string.la, latitudeSetting));
-//        longitudeTextView.setText(getResources().getString(R.string.long_textField, longitudeSetting));
         latitudeTextView.setText(latitudeSetting);
-        longitudeTextView.setText(/*String.valueOf(longitudeSetting)*/longitudeSetting);
+        longitudeTextView.setText(longitudeSetting);
+
+        if (!newCitySetting.equals(selectedCitySetting)) {
+            getJsonCity(newCitySetting);
+        }
+
+        latitudeTextView.setText(latitudeSetting);
+        longitudeTextView.setText(longitudeSetting);
 
         setUpAstroDateTime(astroDateTime);
 
 //        Log.d("New city setting", newCitySetting);
-//        if(selectedCity != null)
-//            handleCitySelection(selectedCity);
+        if(currentCity != null) {
+            updateWeatherViews(currentCity);
+        }
+
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.d("MainActivity", "onPause");
+        if (currentCity != null) {
+            SharedPreferences.Editor editor = SP.edit();
+            editor.putString("selectedCitySetting", String.valueOf(currentCity.getCityName()));
+            editor.apply();
+        }
+
     }
 
     public com.astrocalculator.AstroCalculator.Location getLocation() {
@@ -189,7 +229,7 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
     }
 
     public Weather getWeather(){
-        return this.selectedCity.getWeather();
+        return this.currentCity.getWeather();
     }
 
     public String getLatitudeSetting() {
@@ -226,11 +266,12 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
     }
 
     private void getJsonCity(final String cityName){
+        Log.d("MainActivity", "getCity");
         YahooWeather.getJsonCity(cityName, requestQueue, new YahooWeather.WeatherClientListener() {
             @Override
             public void onCityResponse(CityResult city) {
                 if (city.getCityName() != null) {
-                    selectedCity = city;
+                    currentCity = city;
                     getJsonWeather(city);
                     Log.d("c", city.toString());
                 } else {
@@ -250,6 +291,7 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
     }
 
     private void getJsonWeather(final CityResult city) {
+        Log.d("MainActivity", "getWeather");
         String woeid = city.getWoeid();
         if (woeid != null) {
             YahooWeather.getJsonWeather(woeid, unitSetting, requestQueue, new YahooWeather.WeatherClientListener() {
@@ -259,20 +301,16 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
 
                 @Override
                 public void onWeatherResponse(Weather weather) {
-                    selectedCity = city;
-                    selectedCity.setWeather(weather);
+                    currentCity = city;
+                    currentCity.setWeather(weather);
 
-                    String s1 = selectedCity.getWeather().condition.date;
-                    String s2 = String.valueOf(selectedCity.getWeather().atmosphere.humidity);
-                    String s3 = String.valueOf(selectedCity.getWeather().wind.speed);
+//                    String s1 = currentCity.getWeather().condition.date;
+//                    String s2 = String.valueOf(currentCity.getWeather().atmosphere.humidity);
+//                    String s3 = String.valueOf(currentCity.getWeather().wind.speed);
+//
+//                    Log.d("Can we display this?", s1 + " " + s2 + " " + s3);
 
-
-                    Log.d("Can we display this?", s1 + " " + s2 + " " + s3);
-                    test.setText(selectedCity.getWeather().condition.temp + " " + " " + selectedCity.getCityName());
-
-                    weatherFragment.fillWeatherView(selectedCity);
-                    detailsFragment.fillDetailsView(selectedCity);
-                    nextDaysFragment.updateListValues();
+                    updateWeatherViews(currentCity);
 
                     getImage();
 
@@ -288,7 +326,8 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
     }
 
     private void getImage() {
-        YahooWeather.getImage(selectedCity.getWeather().condition.code, requestQueue, new YahooWeather.WeatherClientListener() {
+        Log.d("MainActivity", "getImage");
+        YahooWeather.getImage(currentCity.getWeather().condition.code, requestQueue, new YahooWeather.WeatherClientListener() {
             @Override
             public void onCityResponse(CityResult city) {
             }
@@ -305,6 +344,7 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
     }
 
     private void setClockTextView() {
+        Log.d("MainActivity", "setClockTextView");
         final SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
 
         Timer timer = new Timer("Clock timer");
@@ -325,7 +365,115 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        Log.d("MainActivity", "onCreateOptionsMenu");
+        getMenuInflater().inflate(R.menu.menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        Log.d("MainActivity", "optionItemSelected" + " : " + item.getItemId());
+        switch (item.getItemId()) {
+            case R.id.settings_button:
+                Intent settingsIntent = new Intent(this, Preferences.class);
+                startActivity(settingsIntent);
+                return true;
+//            case R.id.favourite_cities_button:
+//                initPopupWindow();
+//                cityListWindow.showAsDropDown(findViewById(R.id.favourite_cities_button));
+//
+//                return true;
+            case R.id.refresh_info_button:
+                if(favCityList.size() > 0)
+                    refreshWeather();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    public void refreshWeather() {
+        Log.d("MainActivity", "refreshWeather");
+        if (isNetworkAvailable(this)){
+            Log.d("reading from web", "OK");
+
+            ArrayList<CityResult> temp = favCityList;
+            favCityList = new ArrayList<>();
+            for (CityResult c : temp) {
+                if (currentCity == null) {
+                    currentCity = c;
+                }
+                getJsonWeather(c);
+            }
+//            initPopupWindow();
+            updateWeatherViews(currentCity);
+            Toast.makeText(this, "Weather updated :>",
+                    Toast.LENGTH_LONG).show();
+        }
+        else {
+            Toast.makeText(this, "No internet connection :<",
+                    Toast.LENGTH_LONG).show();
+        }
+    }
+
+    public void updateLocation() {
+        Log.d("MainActivity", "updateLocation");
+        location.setLatitude(Double.parseDouble(this.getLatitudeSetting()));
+        location.setLongitude(Double.parseDouble(this.getLongitudeSetting()));
+    }
+
+    public void updateWeatherViews(CityResult selectedCity){
+        Log.d("MainActivity", "updateWeatherViews");
+        weatherFragment.fillWeatherView(selectedCity);
+        detailsFragment.fillDetailsView(selectedCity);
+        nextDaysFragment.updateListValues();
+    }
+
+    private boolean getObjectsFromFiles() {
+        Log.d("MainActivity", "getObjectFromFiles");
+        String[] savedFiles = fileList();
+        Log.d("lista zapis", String.valueOf(savedFiles.length));
+        if (savedFiles.length == 0)
+            return false;
+        for (String savedFile : savedFiles) {
+            Log.d("Zapisany plik", savedFile);
+            try {
+                if (savedFile.contains("city")) {
+                    favCityList.add((CityResult) loadFromFile(savedFile, MainActivity.this));
+                }
+            } catch (IOException | ClassNotFoundException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+        Log.d("favCity length", String.valueOf(favCityList.size()));
+        Toast.makeText(this, "Dane pogodowe moga byc nieaktualne",
+                Toast.LENGTH_LONG).show();
+        return true;
+    }
+
+    public static Object loadFromFile(String fileName, Activity activity) throws IOException, ClassNotFoundException {
+        Log.d("MainActivity", "loadFromFile");
+        FileInputStream fis = activity.openFileInput(fileName);
+        ObjectInputStream is = new ObjectInputStream(fis);
+        Object result = is.readObject();
+        is.close();
+        fis.close();
+        return result;
+    }
+
+    public static boolean isNetworkAvailable(Activity activity) {
+        Log.d("MainActivity", "isNetworkAvailable");
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) activity.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
+
+    @Override
     public void onBackPressed() {
+        Log.d("MainActivity", "onBackPressed");
         if (viewPager.getCurrentItem() == 0) {
             // If the user is currently looking at the first step, allow the system to handle the
             // Back button. This calls finish() on this activity and pops the back stack.
@@ -380,8 +528,4 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
 
 
 }
-
-
-
-
 
