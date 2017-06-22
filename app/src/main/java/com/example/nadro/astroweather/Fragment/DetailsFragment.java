@@ -107,6 +107,18 @@ public class DetailsFragment extends Fragment {
         return view;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        if (MainActivity.currentCity != null) {
+            fillDetailsView(MainActivity.currentCity);
+        }
+
+        Log.d("DetailsFragment", "onResume");
+
+    }
+
     public void fillDetailsView(CityResult city){
         if(city.getWoeid() != null) {
             Weather weather = city.getWeather();

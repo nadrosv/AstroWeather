@@ -17,20 +17,21 @@
 
 
     <PreferenceCategory android:title="@string/coordinates_setting">
+        <EditTextPreference
+            android:defaultValue="0"
+            android:inputType="numberDecimal|numberSigned"
+            android:key="latitudeSetting"
+            android:summary="@string/latitude_pref_summary"
+            android:title="@string/settings_latitude" />
 
         <EditTextPreference
             android:defaultValue="0"
-            android:inputType="numberDecimal"
+            android:inputType="numberDecimal|numberSigned"
             android:key="longitudeSetting"
             android:summary="@string/longitude_pref_summary"
             android:title="@string/settings_longitude" />
 
-        <EditTextPreference
-            android:defaultValue="0"
-            android:inputType="numberDecimal"
-            android:key="latitudeSetting"
-            android:summary="@string/latitude_pref_summary"
-            android:title="@string/settings_latitude" />
+
     </PreferenceCategory>
 
 </PreferenceScreen>

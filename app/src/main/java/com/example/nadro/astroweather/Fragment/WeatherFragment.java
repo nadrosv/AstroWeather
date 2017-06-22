@@ -103,6 +103,7 @@ public class WeatherFragment extends Fragment {
 //            mParam1 = getArguments().getString(ARG_PARAM1);
 //            mParam2 = getArguments().getString(ARG_PARAM2);
 //        }
+
     }
 
     @Override
@@ -138,8 +139,10 @@ public class WeatherFragment extends Fragment {
     public void onResume() {
         super.onResume();
 
-//        if (MainActivity.currentCity != null)
-//            fillWeatherView(MainActivity.currentCity);
+        if (MainActivity.currentCity != null) {
+            mainActivity.getImage();
+            fillWeatherView(MainActivity.currentCity);
+        }
 
 
         
@@ -173,10 +176,7 @@ public class WeatherFragment extends Fragment {
             cityTemperatureTextView.setText(weather.condition.temp + DEGREE + weather.units.temperature);
             cityPressureTextView.setText(String.format("%.1f", weather.atmosphere.pressure) + " hPa");
         } else{
-            cityNameTextView.setText("ND");
-            cityCordsTextView.setText("ND");
-            cityTemperatureTextView.setText("ND");
-            cityPressureTextView.setText("ND");
+            Log.d("WeatherFragment", "fillWeatherView: woeid is null");
         }
 
 

@@ -74,6 +74,7 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
 
     // STATE -------------------------------------
     public static CityResult currentCity;
+    public static CityResult newCity;
     private ArrayList<CityResult> favCityList = new ArrayList<>();
     RequestQueue requestQueue;
 
@@ -172,7 +173,8 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
 
     private void setupViewPager(ViewPager viewPager) {
         Log.d("MainActivity", "setupViewPager: calling");
-        if (moonFragment == null && sunFragment == null) {
+        if (moonFragment == null || sunFragment == null || weatherFragment == null
+                || detailsFragment == null || nextDaysFragment == null) {
             Log.d("MainActivity", "setupViewPager: setupFragments");
             sunFragment = new SunFragment();
             moonFragment = new MoonFragment();
@@ -285,9 +287,10 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
             public void onCityResponse(CityResult city) {
                 if (city.getCityName() != null) {
 
-                  if(!Helpers.containsCity(favCityList,city.getWoeid())){
+                  if(!Helpers.containsCity(favCityList, city.getWoeid())){
                       currentCity = city;
-                      getJsonWeather(currentCity);
+                      getJsonWeather(currentCity, true);
+
                   }else{
                       updateWeatherViews(currentCity);
                   }
@@ -310,7 +313,7 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
         });
     }
 
-    private void getJsonWeather(final CityResult city) {
+    private void getJsonWeather(final CityResult city, final boolean refreshViews) {
         Log.d("MainActivity", "getWeather");
         String woeid = city.getWoeid();
         if (woeid != null) {
@@ -321,7 +324,7 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
 
                 @Override
                 public void onWeatherResponse(Weather weather) {
-                    //tu popsulem
+
 //                    city.setWeather(weather);
 //                    favCityList.add(city);
 
@@ -330,7 +333,9 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
                     favCityList.add(currentCity);
 
                     getImage();
-                    updateWeatherViews(currentCity);
+                    if(refreshViews) {
+                        updateWeatherViews(currentCity);
+                    }
 
 //                    String s1 = currentCity.getWeather().condition.date;
 //                    String s2 = String.valueOf(currentCity.getWeather().atmosphere.humidity);
@@ -362,15 +367,18 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
         if (Helpers.isNetworkAvailable(this)){
             Log.d("reading from web", "OK");
 
+            String tempWoeid = currentCity.getWoeid();
             ArrayList<CityResult> temp = favCityList;
             favCityList = new ArrayList<>();
+
             for (CityResult c : temp) {
-                if (currentCity == null) {
-                    currentCity = c;
+                getJsonWeather(c, false);
+                if(c.getWoeid().equals(tempWoeid)){
+                    newCity = c;
                 }
-                getJsonWeather(c);
             }
-//            updateWeatherViews(currentCity);
+
+            updateWeatherViews(newCity);
 
             Toast.makeText(this, "Weather updated :>",
                     Toast.LENGTH_LONG).show();
@@ -381,7 +389,7 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
         }
     }
 
-    private void getImage() {
+    public void getImage() {
         Log.d("MainActivity", "getImage");
         YahooWeather.getImage(currentCity.getWeather().condition.code, requestQueue, new YahooWeather.WeatherClientListener() {
             @Override
@@ -433,9 +441,12 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
         switch (item.getItemId()) {
 
             case R.id.refresh_info_button:
-                if(favCityList.size() > 0)
+                if (favCityList.size() > 0) {
                     refreshWeather();
                     updateWeatherViews(currentCity);
+                } else {
+                    Toast.makeText(this, "There's nothing to reload ;>", Toast.LENGTH_LONG).show();
+                }
                 return true;
 
             case R.id.favourite_cities_button:
