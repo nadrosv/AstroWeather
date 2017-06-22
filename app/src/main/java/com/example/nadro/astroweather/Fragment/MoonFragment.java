@@ -115,7 +115,7 @@ public class MoonFragment extends Fragment {
     public void onPause() {
         super.onPause();
         Log.d("MoonFragment", "onPause");
-//        stopTimerTask();
+        stopTimerTask();
     }
 
     @Override
@@ -127,9 +127,9 @@ public class MoonFragment extends Fragment {
         moonInfoList = setMoonList(moonLabels);
         recyclerView.setAdapter(new MyMoonRecyclerViewAdapter(moonInfoList, mListener));
 
-//        if (updateListTimer == null) {
-//            startTimer();
-//        }
+        if (updateListTimer == null) {
+            startTimer();
+        }
     }
 
     public void startTimer() {
@@ -169,7 +169,7 @@ public class MoonFragment extends Fragment {
     }
 
     public List<String> getMoonValues() {
-        Log.d("MoonFragment", "getMoonValues");
+//        Log.d("MoonFragment", "getMoonValues");
         location = mainActivity.getLocation();
         astroDateTime = mainActivity.getAstroDateTime();
         mainActivity.setUpAstroDateTime(astroDateTime);
@@ -185,6 +185,7 @@ public class MoonFragment extends Fragment {
                 mainActivity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
+                        Log.d("MoonFragment", "getMoonValues");
                         for (int i=0; i < 6; i++) {
                             moonValues = getMoonValues();
                             moonInfoList.get(i).setValue(moonValues.get(i).toString());

@@ -12,19 +12,58 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:layout_marginTop="0dp"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/new_city_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ems="10"
+                android:hint="enter new city name"
+                android:inputType="textPersonName" />
+
+            <Button
+                android:id="@+id/new_city_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="get weather" />
+        </LinearLayout>
+
         <TextView
             android:id="@+id/city_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="City"
+            android:text="ND"
             android:textSize="24sp" />
 
-        <TextView
-            android:id="@+id/city_cord"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="50N19E"
-            android:textSize="16sp" />
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/city_cord"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="ND"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/city_date"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="ND" />
+
+        </LinearLayout>
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -36,7 +75,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="20^C"
+                android:text="ND"
                 android:textSize="30sp" />
 
             <ImageView
@@ -50,7 +89,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="1000hpa"
+                android:text="ND"
                 android:textSize="18sp" />
         </LinearLayout>
 

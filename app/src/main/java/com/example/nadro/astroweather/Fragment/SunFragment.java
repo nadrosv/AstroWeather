@@ -115,7 +115,7 @@ public class SunFragment extends Fragment {
     public void onPause() {
         super.onPause();
         Log.d("SunFragment", "onPause");
-//        stopTimerTask();
+        stopTimerTask();
     }
 
     @Override
@@ -127,9 +127,9 @@ public class SunFragment extends Fragment {
         sunInfoList= setSunList(sunLabels);
         recyclerView.setAdapter(new MySunRecyclerViewAdapter(sunInfoList, mListener));
 
-//        if (updateListTimer == null) {
-//            startTimer();
-//        }
+        if (updateListTimer == null) {
+            startTimer();
+        }
     }
 
     public void startTimer() {
@@ -169,7 +169,7 @@ public class SunFragment extends Fragment {
     }
 
     public List<String> getSunValues() {
-        Log.d("SunFragment", "getSunValues");
+//        Log.d("SunFragment", "getSunValues");
         location = mainActivity.getLocation();
         astroDateTime = mainActivity.getAstroDateTime();
         mainActivity.setUpAstroDateTime(astroDateTime);
@@ -185,6 +185,7 @@ public class SunFragment extends Fragment {
                 mainActivity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
+                        Log.d("SunFragment", "getSunValues");
                         for (int i=0; i < 6; i++) {
                             sunValues = getSunValues();
                             sunInfoList.get(i).setValue(sunValues.get(i).toString());

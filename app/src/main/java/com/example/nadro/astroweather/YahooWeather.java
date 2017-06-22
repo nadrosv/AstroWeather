@@ -2,7 +2,6 @@ package com.example.nadro.astroweather;
 
 import android.graphics.Bitmap;
 import android.util.Log;
-import android.util.Xml;
 import android.widget.ImageView;
 
 import com.android.volley.Request;
@@ -17,10 +16,8 @@ import com.example.nadro.astroweather.Model.Weather;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserFactory;
 
-import java.io.StringReader;
+import java.util.Calendar;
 
 
 public class YahooWeather {
@@ -29,32 +26,32 @@ public class YahooWeather {
 
 
     public static void getJsonCity(String cityName, RequestQueue rq, final WeatherClientListener listener) {
-        String url2Call = makeQueryForJsonCity(cityName);
-        Log.d("SwA", "getCity: Weather URL ["+url2Call+"]");
+        String cityQuery = makeQueryForJsonCity(cityName);
+        Log.d("getJsonCity", "getCity: Weather URL ["+cityQuery+"]");
 //        final CityResult result = new CityResult();
-        StringRequest req = new StringRequest(Request.Method.GET, url2Call, new Response.Listener<String>() {
+        StringRequest req = new StringRequest(Request.Method.GET, cityQuery, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
-                Log.d("JSONresponse", response);
+                Log.d("JsonCityResponse", response);
                 CityResult result = parseJsonCityResponse(response);
 
-                Log.d("JSONresult", result.toString());
+                Log.d("JsonCityResult", result.toString());
                 listener.onCityResponse(result);
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError volleyError) {
-                Log.d("error response", "error");
+                Log.d("getJsonCity", "error");
             }
         });
         rq.add(req);
     }
 
     public static void getJsonWeather(String woeid, String unit, RequestQueue rq, final WeatherClientListener listener) {
-        String url2Call = makeQueryForJsonWeather(woeid, unit);
-        Log.d("SwA", " getWeather: Weather URL ["+url2Call+"]");
+        String weatherQuery = makeQueryForJsonWeather(woeid, unit);
+        Log.d("getJsonWeather", " getWeather: Weather URL ["+weatherQuery+"]");
 //        final Weather result = new Weather();
-        StringRequest req = new StringRequest(Request.Method.GET, url2Call, new Response.Listener<String>() {
+        StringRequest req = new StringRequest(Request.Method.GET, weatherQuery, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
                 Weather result = parseJsonWeatherResponse(response);
@@ -64,7 +61,7 @@ public class YahooWeather {
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError volleyError) {
-
+                Log.d("getJsonWeather", "error");
             }
         });
 
@@ -91,6 +88,7 @@ public class YahooWeather {
 
         }catch(JSONException e){
             Log.d("parseCityJson", "JSON Error");
+            e.printStackTrace();
         }
 
         return result;
@@ -143,11 +141,14 @@ public class YahooWeather {
                 weather.nextDaysList.add(i, nextDay);
             }
 
+            Calendar calendar = Calendar.getInstance();
+            weather.lastUpdate = calendar.getTimeInMillis();
+
 //            for (int i = 0; i < weather.nextDaysList.size(); i++) {
 //                Log.d("Forecast", weather.nextDaysList.get(i).day);
 //            }
 
-            Log.d("Temp", String.valueOf(weather.condition.temp));
+            Log.d("YahooWeather", "Temp" + String.valueOf(weather.condition.temp));
 
 
         }catch(JSONException e){

@@ -88,7 +88,7 @@ public class AstroInfoCalculator {
     }
 
     public String calculateMoonAge() {
-        return /*REAL_FORMATTER.format*/String.valueOf((int)(astroCalculator.getMoonInfo().getAge() % SYNODIC_MONTH_LENGTH));
+        return String.valueOf((int)(astroCalculator.getMoonInfo().getAge() /*% SYNODIC_MONTH_LENGTH*/));
     }
 
     public List<String> getMoonInfoList() {

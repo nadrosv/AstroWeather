@@ -17,7 +17,7 @@ public class Weather implements Serializable{
     public NextDays nextDays = new NextDays();
     public ArrayList<NextDays> nextDaysList = new ArrayList<>();
 
-    public String lastUpdate;
+    public long lastUpdate;
 
     public class Condition implements Serializable{
         public String description;

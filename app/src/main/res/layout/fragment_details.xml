@@ -15,7 +15,7 @@
             android:id="@+id/wind_label"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Wiatr" />
+            android:text="Wind speed and direction" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -27,7 +27,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="10km/h"
+                android:text="ND"
                 android:textSize="24sp" />
 
             <TextView
@@ -35,7 +35,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="NW"
+                android:text="ND"
                 android:textSize="24sp" />
         </LinearLayout>
 
@@ -43,26 +43,26 @@
             android:id="@+id/humidity_label"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Wilgotność" />
+            android:text="Humidity" />
 
         <TextView
             android:id="@+id/humidity_value"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="50%"
+            android:text="ND"
             android:textSize="24sp" />
 
         <TextView
             android:id="@+id/visibility_label"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Widoczność" />
+            android:text="Visibility" />
 
         <TextView
             android:id="@+id/visibility_value"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="100%"
+            android:text="ND"
             android:textSize="24sp" />
     </LinearLayout>
 </RelativeLayout>

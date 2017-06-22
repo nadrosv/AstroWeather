@@ -1,42 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!--<EditTextPreference android:title="@string/settings_refresh_time"-->
-        <!--android:key="refreshTimeSetting"-->
-        <!--android:numeric="integer"-->
-        <!--android:summary="@string/refresh_pref_summary"/>-->
-
-    <!--<EditTextPreference android:title="@string/add_city_menu"-->
-        <!--android:key="newCitySetting"-->
-        <!--/>-->
-
     <ListPreference
-        android:key="unitSetting"
-        android:title="@string/settings_units"
         android:entries="@array/units"
-        android:entryValues="@array/units"/>
+        android:entryValues="@array/units"
+        android:key="unitSetting"
+        android:title="@string/settings_units" />
 
     <ListPreference
-        android:defaultValue="1"
-        android:title="@string/settings_refresh_time"
+        android:defaultValue="60"
+        android:entries="@array/refresh_time_entries"
+        android:entryValues="@array/refresh_time_values"
+        android:key="refreshTimeSetting"
         android:summary="@string/refresh_pref_summary"
-        android:entries="@array/refresh_time"
-        android:entryValues="@array/refresh_time"
-        android:key="list_preference_1" />
+        android:title="@string/settings_refresh_time" />
 
 
-    <PreferenceCategory
-        android:title="@string/coordinates_setting">
+    <PreferenceCategory android:title="@string/coordinates_setting">
 
-        <EditTextPreference android:title="@string/settings_longitude"
+        <EditTextPreference
+            android:defaultValue="0"
+            android:inputType="numberDecimal"
             android:key="longitudeSetting"
-            android:numeric="decimal"
-            android:summary="@string/longitude_pref_summary"/>
+            android:summary="@string/longitude_pref_summary"
+            android:title="@string/settings_longitude" />
 
-        <EditTextPreference android:title="@string/settings_latitude"
+        <EditTextPreference
+            android:defaultValue="0"
+            android:inputType="numberDecimal"
             android:key="latitudeSetting"
-            android:numeric="decimal"
-            android:summary="@string/latitude_pref_summary"/>
+            android:summary="@string/latitude_pref_summary"
+            android:title="@string/settings_latitude" />
     </PreferenceCategory>
 
 </PreferenceScreen>

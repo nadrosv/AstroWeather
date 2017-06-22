@@ -2,9 +2,11 @@ package com.example.nadro.astroweather;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.preference.PreferenceManager;
@@ -12,12 +14,19 @@ import android.support.design.widget.TabLayout;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutCompat;
+import android.support.v7.widget.ListViewCompat;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -45,7 +54,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 
-public class MainActivity extends AppCompatActivity implements DetailsFragment.OnFragmentInteractionListener, WeatherFragment.OnFragmentInteractionListener {
+public class MainActivity extends AppCompatActivity implements DetailsFragment.OnFragmentInteractionListener, WeatherFragment.OnFragmentInteractionListener, WeatherFragment.OnCitySelectedListener {
 
 
     SharedPreferences SP;
@@ -100,10 +109,10 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
         requestQueue = Volley.newRequestQueue(getApplicationContext());
         SP = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
 
-        refreshTimeSetting = SP.getString("refreshTimeSetting", "10000");
+        refreshTimeSetting = SP.getString("refreshTimeSetting", "60");
         latitudeSetting = SP.getString("latitudeSetting", "0"); //szerokosc
         longitudeSetting = SP.getString("longitudeSetting", "0"); //dlugosc
-        newCitySetting = SP.getString("newCitySetting", "");
+//        newCitySetting = SP.getString("newCitySetting", "");
         unitSetting = SP.getString("unitSetting", "c");
         selectedCitySetting = SP.getString("selectedCitySetting","");
         location = this.getLocation();
@@ -141,23 +150,30 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
         }
 
         if(!selectedCitySetting.equals("")) {
-
-            if (!getObjectsFromFiles()) {
+            if (getObjectsFromFiles()) {
                 for (CityResult c : favCityList) {
+
                     if (c.getCityName().equals(selectedCitySetting)) {
                         currentCity = c;
                     }
                 }
-                refreshWeather();
+                Calendar calendar = Calendar.getInstance();
+                if((calendar.getTimeInMillis() - currentCity.getWeather().lastUpdate) > 3600000){
+                    Log.d("Main", "weather out of date - refresh");
+                    refreshWeather();
+                }
+
+//                refreshWeather();
+//                updateWeatherViews(currentCity);
             }
         }
 
     }
 
     private void setupViewPager(ViewPager viewPager) {
-        Log.d("MainActivity", "setupViewPager");
+        Log.d("MainActivity", "setupViewPager: calling");
         if (moonFragment == null && sunFragment == null) {
-
+            Log.d("MainActivity", "setupViewPager: setupFragments");
             sunFragment = new SunFragment();
             moonFragment = new MoonFragment();
             weatherFragment = new WeatherFragment();
@@ -188,26 +204,23 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
         latitudeSetting = SP.getString("latitudeSetting", "0"); //szerokosc
         longitudeSetting = SP.getString("longitudeSetting", "0"); //dlugosc
         refreshTimeSetting = SP.getString("refreshTimeSetting", "10000");
-        newCitySetting = SP.getString("newCitySetting", "");
         unitSetting = SP.getString("unitSetting", "c");
-        Log.d("newCity", newCitySetting);
+
 
         latitudeTextView.setText(latitudeSetting);
         longitudeTextView.setText(longitudeSetting);
 
-        if (!newCitySetting.equals(selectedCitySetting)) {
-            getJsonCity(newCitySetting);
-        }
-
-        latitudeTextView.setText(latitudeSetting);
-        longitudeTextView.setText(longitudeSetting);
+//        if (!newCitySetting.equals(selectedCitySetting)) {
+//            getJsonCity(newCitySetting);
+//        }
 
         setUpAstroDateTime(astroDateTime);
 
-//        Log.d("New city setting", newCitySetting);
-        if(currentCity != null) {
-            updateWeatherViews(currentCity);
-        }
+
+//        if(currentCity != null) {
+//            updateWeatherViews(currentCity);
+//        }
+
 
     }
 
@@ -271,8 +284,15 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
             @Override
             public void onCityResponse(CityResult city) {
                 if (city.getCityName() != null) {
-                    currentCity = city;
-                    getJsonWeather(city);
+
+                  if(!Helpers.containsCity(favCityList,city.getWoeid())){
+                      currentCity = city;
+                      getJsonWeather(currentCity);
+                  }else{
+                      updateWeatherViews(currentCity);
+                  }
+
+
                     Log.d("c", city.toString());
                 } else {
                     Toast.makeText(MainActivity.this, "Bledne miasto",
@@ -301,8 +321,16 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
 
                 @Override
                 public void onWeatherResponse(Weather weather) {
+                    //tu popsulem
+//                    city.setWeather(weather);
+//                    favCityList.add(city);
+
                     currentCity = city;
                     currentCity.setWeather(weather);
+                    favCityList.add(currentCity);
+
+                    getImage();
+                    updateWeatherViews(currentCity);
 
 //                    String s1 = currentCity.getWeather().condition.date;
 //                    String s2 = String.valueOf(currentCity.getWeather().atmosphere.humidity);
@@ -310,10 +338,14 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
 //
 //                    Log.d("Can we display this?", s1 + " " + s2 + " " + s3);
 
-                    updateWeatherViews(currentCity);
+                    try {
+                        Helpers.saveToFile("city_" + city.getCityName()+ ".txt", city, MainActivity.this);
+                        Log.d("getWeather", "City saved to txt file: " + currentCity.getCityName());
 
-                    getImage();
-
+                    } catch (IOException e) {
+                        Log.d("getWeather", "City save failed");
+                        e.printStackTrace();
+                    }
                 }
 
                 @Override
@@ -322,6 +354,30 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
             });
         }else{
             Log.d("getWeather", "woeid is null bro");
+        }
+    }
+
+    public void refreshWeather() {
+        Log.d("MainActivity", "refreshWeather");
+        if (Helpers.isNetworkAvailable(this)){
+            Log.d("reading from web", "OK");
+
+            ArrayList<CityResult> temp = favCityList;
+            favCityList = new ArrayList<>();
+            for (CityResult c : temp) {
+                if (currentCity == null) {
+                    currentCity = c;
+                }
+                getJsonWeather(c);
+            }
+//            updateWeatherViews(currentCity);
+
+            Toast.makeText(this, "Weather updated :>",
+                    Toast.LENGTH_LONG).show();
+        }
+        else {
+            Toast.makeText(this, "No internet connection :<",
+                    Toast.LENGTH_LONG).show();
         }
     }
 
@@ -375,47 +431,68 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
     public boolean onOptionsItemSelected(MenuItem item) {
         Log.d("MainActivity", "optionItemSelected" + " : " + item.getItemId());
         switch (item.getItemId()) {
+
+            case R.id.refresh_info_button:
+                if(favCityList.size() > 0)
+                    refreshWeather();
+                    updateWeatherViews(currentCity);
+                return true;
+
+            case R.id.favourite_cities_button:
+                initCityDialog();
+                return true;
+
             case R.id.settings_button:
                 Intent settingsIntent = new Intent(this, Preferences.class);
                 startActivity(settingsIntent);
                 return true;
-//            case R.id.favourite_cities_button:
-//                initPopupWindow();
-//                cityListWindow.showAsDropDown(findViewById(R.id.favourite_cities_button));
-//
-//                return true;
-            case R.id.refresh_info_button:
-                if(favCityList.size() > 0)
-                    refreshWeather();
-                return true;
+
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
 
-    public void refreshWeather() {
-        Log.d("MainActivity", "refreshWeather");
-        if (isNetworkAvailable(this)){
-            Log.d("reading from web", "OK");
-
-            ArrayList<CityResult> temp = favCityList;
-            favCityList = new ArrayList<>();
-            for (CityResult c : temp) {
-                if (currentCity == null) {
-                    currentCity = c;
-                }
-                getJsonWeather(c);
+    @Override
+    public void onCitySelected(String city) {
+        Log.d("MainActivity", "onCitySelected");
+        if(!city.isEmpty()){
+            if (Helpers.isNetworkAvailable(this)) {
+                getJsonCity(city);
             }
-//            initPopupWindow();
-            updateWeatherViews(currentCity);
-            Toast.makeText(this, "Weather updated :>",
+            else{
+                Toast.makeText(this, "No internet connection",
+                        Toast.LENGTH_LONG).show();
+            }
+        }else{
+            Toast.makeText(this, "Enter valid city name >:[",
                     Toast.LENGTH_LONG).show();
         }
-        else {
-            Toast.makeText(this, "No internet connection :<",
-                    Toast.LENGTH_LONG).show();
-        }
+
     }
+
+    private void initCityDialog() {
+        final String[] cityNames = new String[favCityList.size()];
+
+        for (int i = 0; i < favCityList.size(); i++) {
+            cityNames[i] = favCityList.get(i).getCityName();
+        }
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Choose city");
+
+        builder.setItems(cityNames, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int position) {
+                currentCity = favCityList.get(position);
+                getImage();
+                updateWeatherViews(currentCity);
+            }
+        });
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+
 
     public void updateLocation() {
         Log.d("MainActivity", "updateLocation");
@@ -432,15 +509,17 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
 
     private boolean getObjectsFromFiles() {
         Log.d("MainActivity", "getObjectFromFiles");
+
         String[] savedFiles = fileList();
-        Log.d("lista zapis", String.valueOf(savedFiles.length));
+        Log.d("getObjectFromFiles", "saved files: " + String.valueOf(savedFiles.length));
+
         if (savedFiles.length == 0)
             return false;
         for (String savedFile : savedFiles) {
             Log.d("Zapisany plik", savedFile);
             try {
                 if (savedFile.contains("city")) {
-                    favCityList.add((CityResult) loadFromFile(savedFile, MainActivity.this));
+                    favCityList.add((CityResult) Helpers.loadFromFile(savedFile, MainActivity.this));
                 }
             } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
@@ -448,27 +527,9 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
             }
         }
         Log.d("favCity length", String.valueOf(favCityList.size()));
-        Toast.makeText(this, "Dane pogodowe moga byc nieaktualne",
+        Toast.makeText(this, "Weather info may be out of date",
                 Toast.LENGTH_LONG).show();
         return true;
-    }
-
-    public static Object loadFromFile(String fileName, Activity activity) throws IOException, ClassNotFoundException {
-        Log.d("MainActivity", "loadFromFile");
-        FileInputStream fis = activity.openFileInput(fileName);
-        ObjectInputStream is = new ObjectInputStream(fis);
-        Object result = is.readObject();
-        is.close();
-        fis.close();
-        return result;
-    }
-
-    public static boolean isNetworkAvailable(Activity activity) {
-        Log.d("MainActivity", "isNetworkAvailable");
-        ConnectivityManager connectivityManager
-                = (ConnectivityManager) activity.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
-        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
     @Override

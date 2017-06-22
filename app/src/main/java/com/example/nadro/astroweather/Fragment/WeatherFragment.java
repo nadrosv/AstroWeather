@@ -11,6 +11,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -19,6 +22,8 @@ import com.example.nadro.astroweather.Model.CityResult;
 import com.example.nadro.astroweather.Model.Weather;
 import com.example.nadro.astroweather.R;
 import com.example.nadro.astroweather.YahooWeather;
+
+import static android.content.Context.INPUT_METHOD_SERVICE;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -50,19 +55,17 @@ public class WeatherFragment extends Fragment {
 //    private Integer cityTemperature;
 //    private Float cityPressure;
 
-    CityResult cRes;
-
-    private String cityName;
-    private String cityCords;
-    private Integer cityTemperature;
-    private Float cityPressure;
-
 
     private TextView cityNameTextView;
     private TextView cityCordsTextView;
+    private TextView cityDateTextView;
     private TextView cityTemperatureTextView;
     private TextView cityPressureTextView;
     private ImageView cityWeatherIcon;
+    private Button newCityButton;
+    private EditText newCityText;
+
+    OnCitySelectedListener csListener;
 
 //    private BitmapDrawable testImage;
 
@@ -95,6 +98,7 @@ public class WeatherFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d("WeatherFragment", "onCreate");
 //        if (getArguments() != null) {
 //            mParam1 = getArguments().getString(ARG_PARAM1);
 //            mParam2 = getArguments().getString(ARG_PARAM2);
@@ -104,12 +108,28 @@ public class WeatherFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_weather, container, false);
+
+        Log.d("WeatherFragment", "onCreateView");
+        final View view = inflater.inflate(R.layout.fragment_weather, container, false);
+
         cityNameTextView = (TextView) view.findViewById(R.id.city_name);
         cityCordsTextView = (TextView) view.findViewById(R.id.city_cord);
+        cityDateTextView = (TextView) view.findViewById(R.id.city_date);
         cityTemperatureTextView = (TextView) view.findViewById(R.id.city_temperature);
         cityPressureTextView = (TextView) view.findViewById(R.id.city_pressure);
         cityWeatherIcon = (ImageView) view.findViewById(R.id.city_weather);
+
+        newCityButton = (Button) view.findViewById(R.id.new_city_button);
+        newCityText = (EditText) view.findViewById(R.id.new_city_text);
+
+        newCityButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d("WeatherFragment", newCityText.getText().toString());
+                csListener.onCitySelected(newCityText.getText().toString());
+                newCityText.setText("");
+            }
+        });
 
         return view;
     }
@@ -123,7 +143,7 @@ public class WeatherFragment extends Fragment {
 
 
         
-        Log.d("Basic Temp resume", "calling");
+        Log.d("WeatherFragment", "onResume");
 
     }
 
@@ -147,8 +167,9 @@ public class WeatherFragment extends Fragment {
     public void fillWeatherView(CityResult city){
         if(city.getWoeid() != null) {
             Weather weather = city.getWeather();
-            cityNameTextView.setText(city.getCityName());
+            cityNameTextView.setText(city.getCityName() + ", " + city.getCountry());
             cityCordsTextView.setText(city.getCoordinates());
+            cityDateTextView.setText(weather.condition.date);
             cityTemperatureTextView.setText(weather.condition.temp + DEGREE + weather.units.temperature);
             cityPressureTextView.setText(String.format("%.1f", weather.atmosphere.pressure) + " hPa");
         } else{
@@ -203,11 +224,12 @@ public class WeatherFragment extends Fragment {
         super.onAttach(context);
         mainActivity = (MainActivity) context;
 //        if (context instanceof OnFragmentInteractionListener) {
-//            mListener = (OnFragmentInteractionListener) context;
-//        } else {
-//            throw new RuntimeException(context.toString()
-//                    + " must implement OnFragmentInteractionListener");
-//        }
+        try {
+            csListener = (WeatherFragment.OnCitySelectedListener) context;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(context.toString()
+                    + " must implement OnHeadlineSelectedListener");
+        }
     }
 
     @Override
@@ -229,6 +251,10 @@ public class WeatherFragment extends Fragment {
     public interface OnFragmentInteractionListener {
         // TODO: Update argument type and name
         void onWeatherFragmentInteraction(String string);
+    }
+
+    public interface OnCitySelectedListener {
+        void onCitySelected(String city);
     }
 
     public void setImage(Bitmap image) {

@@ -13,7 +13,7 @@ public class CityResult implements Serializable {
     private String cityName;
     private String country;
     private Weather weather;
-    private AstroCalculator.Location coordinates;
+    private Coordinates coordinates;
 
     public CityResult() {}
 
@@ -24,7 +24,7 @@ public class CityResult implements Serializable {
     }
 
     public void setCoordinates(double lat, double lon){
-        this.coordinates = new AstroCalculator.Location(lat, lon);
+        this.coordinates = new Coordinates(lat, lon);
     }
 
     public String getCoordinates(){
@@ -79,5 +79,39 @@ public class CityResult implements Serializable {
     @Override
     public String toString() {
         return cityName + "," + country;
+    }
+
+    public class Coordinates implements Serializable{
+        private double latitude;
+        private double longitude;
+
+        Coordinates(){
+            this.latitude = 0;
+            this.longitude = 0;
+        }
+
+        Coordinates(double lat, double lon){
+            if(lat >= -90 && lat <= 90 && lon <= 180 && lon >= -180) {
+                this.latitude = lat;
+                this.longitude = lon;
+            }else{
+                this.latitude = 0;
+                this.longitude = 0;
+            }
+        }
+
+        public void setLatitude(double lat){
+            this.latitude = lat;
+        }
+        public void setLongitude(double lon){
+            this.longitude = lon;
+        }
+        public double getLatitude(){
+            return latitude;
+        }
+        public double getLongitude(){
+            return longitude;
+        }
+
     }
 }

@@ -33,7 +33,7 @@ public class NextDaysFragment extends Fragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        Log.d("nextdays onAttach", "calling");
+        Log.d("NextDaysFragment", "onAttach");
 
         mainActivity = (MainActivity) context;
     }
@@ -42,7 +42,7 @@ public class NextDaysFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_days, container, false);
         daysListView = (ListView) rootView.findViewById(R.id.days_listView);
-        Log.d("nextdays onCreateView", "calling");
+        Log.d("NextDaysFragment", "onCreateView");
 
         return rootView;
     }
@@ -50,8 +50,7 @@ public class NextDaysFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        Log.d("resume", "resue");
-
+        Log.d("NextDaysFragment", "onResume");
     }
 
     public void updateListValues() {
