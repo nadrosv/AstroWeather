@@ -1,32 +1,22 @@
 package com.example.nadro.astroweather;
 
-import android.app.Activity;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.preference.PreferenceManager;
-import android.support.design.widget.TabLayout;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.LinearLayoutCompat;
-import android.support.v7.widget.ListViewCompat;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.PopupWindow;
+import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -41,9 +31,7 @@ import com.example.nadro.astroweather.Fragment.WeatherFragment;
 import com.example.nadro.astroweather.Model.CityResult;
 import com.example.nadro.astroweather.Model.Weather;
 
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -59,7 +47,6 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
 
     SharedPreferences SP;
 
-    private static String newCitySetting;
     private String selectedCitySetting;
 
     public static String refreshTimeSetting;
@@ -85,7 +72,8 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
     //number of pages
     private static final int NUM_PAGES = 5;
     //The pager widget, which handles animation and allows swiping horizontally to access previous and next wizard steps.
-    private ViewPager viewPager;
+    private ViewPager viewPagerSmall;
+    ViewPager viewPagerLarge;
 
     private SunFragment sunFragment;
     private MoonFragment moonFragment;
@@ -96,8 +84,6 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
     private TextView longitudeTextView;
     private TextView latitudeTextView;
     private TextView clockTextView;
-
-
 
 
 
@@ -113,7 +99,6 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
         refreshTimeSetting = SP.getString("refreshTimeSetting", "60");
         latitudeSetting = SP.getString("latitudeSetting", "0"); //szerokosc
         longitudeSetting = SP.getString("longitudeSetting", "0"); //dlugosc
-//        newCitySetting = SP.getString("newCitySetting", "");
         unitSetting = SP.getString("unitSetting", "c");
         selectedCitySetting = SP.getString("selectedCitySetting","");
         location = this.getLocation();
@@ -135,19 +120,26 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
 
 
         // Instantiate a ViewPager and a PagerAdapter.
-        viewPager = (ViewPager) findViewById(R.id.portraitViewPager);
+        viewPagerSmall = (ViewPager) findViewById(R.id.small_pager);
+        viewPagerLarge = (ViewPager) findViewById(R.id.large_pager);
         pagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
-        viewPager.setAdapter(pagerAdapter);
 
-        if (viewPager != null) {
-            setupViewPager(viewPager);
-            viewPager.setOffscreenPageLimit(5);
+
+        if (viewPagerSmall != null) {
+            viewPagerSmall.setAdapter(pagerAdapter);
+            setupViewPager(viewPagerSmall);
+            viewPagerSmall.setOffscreenPageLimit(5);
 
 //            !!!!!
 //            TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
 //            if (tabLayout != null) {
-//                tabLayout.setupWithViewPager(viewPager);
+//                tabLayout.setupWithViewPager(viewPagerSmall);
 //            }
+        }else if (viewPagerLarge != null) {
+            Log.d("viewPagerSmall", "calling");
+            HorizontalPageAdapter adapter = new HorizontalPageAdapter();
+            viewPagerLarge.setOffscreenPageLimit(5);
+            viewPagerLarge.setAdapter(adapter);
         }
 
         if(!selectedCitySetting.equals("")) {
@@ -163,9 +155,6 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
                     Log.d("Main", "weather out of date - refresh");
                     refreshWeather();
                 }
-
-//                refreshWeather();
-//                updateWeatherViews(currentCity);
             }
         }
 
@@ -175,7 +164,6 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
         Log.d("MainActivity", "setupViewPager: calling");
         if (moonFragment == null || sunFragment == null || weatherFragment == null
                 || detailsFragment == null || nextDaysFragment == null) {
-            Log.d("MainActivity", "setupViewPager: setupFragments");
             sunFragment = new SunFragment();
             moonFragment = new MoonFragment();
             weatherFragment = new WeatherFragment();
@@ -198,6 +186,8 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
         }
     }
 
+
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -212,18 +202,7 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
         latitudeTextView.setText(latitudeSetting);
         longitudeTextView.setText(longitudeSetting);
 
-//        if (!newCitySetting.equals(selectedCitySetting)) {
-//            getJsonCity(newCitySetting);
-//        }
-
         setUpAstroDateTime(astroDateTime);
-
-
-//        if(currentCity != null) {
-//            updateWeatherViews(currentCity);
-//        }
-
-
     }
 
     @Override
@@ -336,12 +315,6 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
                     if(refreshViews) {
                         updateWeatherViews(currentCity);
                     }
-
-//                    String s1 = currentCity.getWeather().condition.date;
-//                    String s2 = String.valueOf(currentCity.getWeather().atmosphere.humidity);
-//                    String s3 = String.valueOf(currentCity.getWeather().wind.speed);
-//
-//                    Log.d("Can we display this?", s1 + " " + s2 + " " + s3);
 
                     try {
                         Helpers.saveToFile("city_" + city.getCityName()+ ".txt", city, MainActivity.this);
@@ -546,13 +519,13 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
     @Override
     public void onBackPressed() {
         Log.d("MainActivity", "onBackPressed");
-        if (viewPager.getCurrentItem() == 0) {
+        if (viewPagerSmall.getCurrentItem() == 0) {
             // If the user is currently looking at the first step, allow the system to handle the
             // Back button. This calls finish() on this activity and pops the back stack.
             super.onBackPressed();
         } else {
             // Otherwise, select the previous step.
-            viewPager.setCurrentItem(viewPager.getCurrentItem() - 1);
+            viewPagerSmall.setCurrentItem(viewPagerSmall.getCurrentItem() - 1);
         }
     }
 
@@ -598,6 +571,42 @@ public class MainActivity extends AppCompatActivity implements DetailsFragment.O
         }
     }
 
+    public class HorizontalPageAdapter extends PagerAdapter {
+
+        public Object instantiateItem(ViewGroup collection, int position) {
+            Log.d("position", String.valueOf(position));
+            int resId = 0;
+            sunFragment = new SunFragment();
+            moonFragment = new MoonFragment();
+            weatherFragment = new WeatherFragment();
+            detailsFragment = new DetailsFragment();
+            nextDaysFragment = new NextDaysFragment();
+            getSupportFragmentManager().beginTransaction().replace(R.id.moon_fragment, moonFragment).commit();
+            getSupportFragmentManager().beginTransaction().replace(R.id.sun_fragment, sunFragment).commit();
+            getSupportFragmentManager().beginTransaction().replace(R.id.weather_fragment, weatherFragment).commit();
+            getSupportFragmentManager().beginTransaction().replace(R.id.details_fragment, detailsFragment).commit();
+            getSupportFragmentManager().beginTransaction().replace(R.id.nextdays_fragment, nextDaysFragment).commit();
+            switch (position) {
+                case 0:
+                    resId = R.id.page_one;
+                    break;
+                case 1:
+                    resId = R.id.page_two;
+                    break;
+            }
+            return findViewById(resId);
+        }
+
+        @Override
+        public int getCount() {
+            return 2;
+        }
+
+        @Override
+        public boolean isViewFromObject(View arg0, Object arg1) {
+            return arg0 == ((View) arg1);
+        }
+    }
 
 }
 

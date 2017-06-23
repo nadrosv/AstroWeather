@@ -48,7 +48,7 @@
         </LinearLayout>
 
         <android.support.v4.view.ViewPager xmlns:android="http://schemas.android.com/apk/res/android"
-            android:id="@+id/portraitViewPager"
+            android:id="@+id/small_pager"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 
